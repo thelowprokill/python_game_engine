@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# logs
+*.log
+# save_games
+*.data
+
 # Distribution / packaging
 .Python
 build/
