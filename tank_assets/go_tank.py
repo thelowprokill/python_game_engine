@@ -7,6 +7,7 @@ class GOTank(GameObject):
         #self.use_gravity  = True
         self.world_static = False
         self.collision    = True
+        self.frame        = 0
 
     def user_collision(self, collision):
         pass
@@ -20,15 +21,19 @@ class GOTank(GameObject):
     def move_up(self):
         if self.positon.y > 1:
             self.position.y -= 1
+            self.frame = 0
     def move_down(self):
         if self.position.y < self.engine_ref.display.height - 6:
             self.position.y += 1
+            self.frame = 0
     def move_left(self):
         if self.position.x > 1:
             self.position.x -= 1
+            self.frame = 1
     def move_right(self):
-        if self.position.x < self.engine_ref.display.width - 8:
+        if self.position.x < self.engine_ref.display.width - 11:
             self.position.x += 1
+            self.frame = 1
 
     def set_colider(self):
         self.collider = [
@@ -46,6 +51,12 @@ class GOTank(GameObject):
         []   []
         []___[]
         []   []
+
+         ________
+        |________|
+         _|____|_
+        |________|
+
         """
 
         self.model = [
@@ -55,5 +66,12 @@ class GOTank(GameObject):
               ["[",  "]", "",  "",  "",  "[", "]" ],
               ["[",  "]", "_", "_", "_", "[", "]" ],
               ["[",  "]", "",  "",  "",  "[", "]" ],
+            ]
+            [
+              ["",  "_", "_", "_", "_", "_", "_", "_", "_", ""  ],
+              ["|", "_", "_", "_", "_", "_", "_", "_", "_", "|" ],
+              ["",  "_", "|", "_", "_", "_", "_", "|", "_", ""  ],
+              ["",  "_", "_", "_", "_", "_", "_", "_", "_", ""  ],
+              ["|", "_", "_", "_", "_", "_", "_", "_", "_", "|" ],
             ]
         ]
