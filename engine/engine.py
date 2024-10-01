@@ -9,9 +9,9 @@ from engine.utility.collision_enums import CollisionModes as CM, CollisionTypes 
 from engine.utility.input_handler   import InputHandler
 
 class Engine:
-    def __init__(self):
+    def __init__(self, fps = 15):
         self.display         = Display()
-        self.max_fps         = 15
+        self.max_fps         = fps
         self.fps_frames      = 0
         self.fps_int         = 0.25
         self.fps             = self.max_fps

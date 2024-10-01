@@ -14,10 +14,10 @@ class GameObject:
     # purpose: initializer for game object      #
     # overwriteable: False                      #
     #############################################
-    def __init__(self, e, x = 1, y = 1):
+    def __init__(self, e, pos = Vector(1, 1), vel = Vector()):
         self.engine_ref    = e
-        self.last_position = Vector(x, y)
-        self.position      = Vector(x, y)
+        self.last_position = pos
+        self.position      = pos
         self.z = 0
 
         self.on_screen = False
