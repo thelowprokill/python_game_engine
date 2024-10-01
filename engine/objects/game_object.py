@@ -1,6 +1,7 @@
 from engine.utility.vector          import Vector
 from engine.utility.collision       import Collision
 from engine.utility.collision_enums import CollisionModes as CM, CollisionTypes as CT, CollisionDirection as CD
+import curses
 
 #################################################
 # class:   GameObject                           #
@@ -20,10 +21,12 @@ class GameObject:
         self.position      = pos
         self.z = 0
 
+        self.color     = 0
+
         self.on_screen = False
 
         self.gravity  = Vector(0, 9.81)
-        self.velocity = Vector()
+        self.velocity = vel
 
         self.use_gravity    = False
         self.world_static   = True
@@ -35,7 +38,7 @@ class GameObject:
 
         self.frame  = 0
         self.frames = 0
-        self.frames_per_frame = 5
+        self.frames_per_frame = 0
 
         self.user_init_inputs()
 
@@ -78,13 +81,16 @@ class GameObject:
     def dynamic_collision(self, collision):
         if self.collision and collision.obj_1 is not None and collision.obj_2 is not None:
             if collision.obj_1 == self:
-                print("I am obj 1")
+                #print("I am obj 1")
+                pass
             elif collision.obj_2 == self:
-                print("I am obj 2")
+                #print("I am obj 2")
+                pass
             else:
-                print("Why do I not fit in")
-            print(collision)
-            print(5/0)
+                #print("Why do I not fit in")
+                pass
+            #print(collision)
+            #print(5/0)
 
     #############################################
     # fun: world_collision/4                    #
@@ -129,9 +135,15 @@ class GameObject:
         y = y - int(self.position.y)
 
         if x >= 0 and x < self.width() and y >= 0 and y < self.height():
-            return (self.model[self.frame][y][x], self.z)
+            return (self.model[self.frame][y][x], self.z, self.color)
         else:
-            return ("", -1)
+            return ("", -1, None)
+
+    def render(self, window):
+        y = int(self.position.y)
+        for l in self.model[self.frame]:
+            window.addstr(y, int(self.position.x), l, curses.color_pair(self.color))
+            y += 1
 
     #############################################
     # fun: set_model/1                          #
@@ -172,7 +184,7 @@ class GameObject:
             self.last_position = self.position
 
         #update anim
-        if self.frames > self.frames_per_frame:
+        if self.frames > self.frames_per_frame and self.frames_per_frame > 0:
             self.frames = 1
             self.frame += 1
             if self.frame >= len(self.model):

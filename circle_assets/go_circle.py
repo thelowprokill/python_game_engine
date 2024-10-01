@@ -1,13 +1,16 @@
 from engine.objects.game_object import GameObject
 from engine.utility.vector      import Vector
+from engine.display.colors      import bcolors
+import curses
 
 class GOCircle(GameObject):
     def user_init(self):
         self.obj_name     = "A"
-        self.velocity     = Vector(10, 10)
+        self.it           = False
         self.use_gravity  = True
         self.world_static = False
         self.collision    = True
+        self.color        = bcolors.white
 
     def user_collision(self, collision):
         pass
@@ -31,11 +34,24 @@ class GOCircle(GameObject):
     def set_model(self):
         self.model = [
             [
-              ["",   "-", "-", "-", "-", ""  ],
-              ["/",  "",  "",  "",  "",  "\\"],
-              ["|",  "",  self.obj_name,  "",  "",  "|" ],
-              ["|",  "",  "",  "",  "",  "|" ],
-              ["\\", "",  "",  "",  "",  "/" ],
-              ["",   "-", "-", "-", "-", ""  ]
+              #["",   "-", "-", "-", "-", ""  ],
+              #["/",  "",  "",  "",  "",  "\\"],
+              #["|",  "",  self.obj_name,  "",  "",  "|" ],
+              #["|",  "",  "",  "",  "",  "|" ],
+              #["\\", "",  "",  "",  "",  "/" ],
+              #["",   "-", "-", "-", "-", ""  ]
+              " ---- ",
+              "/    \\",
+              "|    |",
+              "|    |",
+              "\\    /",
+              " ---- "
             ]
         ]
+
+    def render(self, window):
+        super().render(window)
+        
+        if self.it:
+            window.addstr(int(self.position.y) + 2, int(self.position.x) + 2, "It", curses.color_pair(bcolors.red))
+

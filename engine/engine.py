@@ -3,10 +3,13 @@
 import os
 import time
 
-from engine.display.display         import Display
-from engine.utility.collision       import Collision
-from engine.utility.collision_enums import CollisionModes as CM, CollisionTypes as CT, CollisionDirection as CD
-from engine.utility.input_handler   import InputHandler
+from curses import wrapper
+
+from engine.display.display              import Display
+from engine.utility.collision            import Collision
+from engine.utility.collision_enums      import CollisionModes as CM, CollisionTypes as CT, CollisionDirection as CD
+from engine.utility.input_handler        import InputHandler
+from engine.utility.curses_input_handler import CursesInuputHandler
 
 class Engine:
     def __init__(self, fps = 15):
@@ -18,43 +21,54 @@ class Engine:
         self.world_collision = True
         self.obj_collision   = True
 
-        self.paused          = True
+        self.paused          = False
 
         self.dynamic_objects = []
         self.static_objects  = []
         self.input_handler   = InputHandler()
+        self.curses_input    = CursesInuputHandler()
 
-        self.input_handler.bind_input("\x1b", self, self.pause)
-        self.input_handler.bind_input(" ",    self, self.resume)
+        #self.input_handler.bind_input("\x1b", self, self.pause)
+        #self.input_handler.bind_input(" ",    self, self.resume)
+        #self.curses_input.bind_input("\x1b", self, self.pause)
+        self.curses_input.bind_input(" ",    self, self.resume)
 
     def set_res(self, width = None, height = None):
         self.display.width  = width  if width  is not None else self.display.width
         self.display.height = height if height is not None else self.display.height
 
     def start(self):
+        wrapper(self.run)
+
+    def run(self, stdscr):
         self.fps_time   = time.time()
         self.start_time = time.time()
         self.last_time  = time.time()
         self.next_time  = time.time()
+
+        self.display.set_window(stdscr)
+        self.curses_input.set_window(stdscr)
+        stdscr.nodelay(True)
 
         i = 0
         while i < 800:
             self.next_time = time.time()
             dt = self.next_time - self.last_time
             self.input_handler.check_inputs()
+            self.curses_input.check_inputs()
 
             if not self.paused:
                 i += 1
-                self.clear_screen()
-                print("FPS: {}".format(self.fps))
+                #self.clear_screen()
+                #print("FPS: {}".format(self.fps))
 
                 #self.display.tick(dt)
                 self.tick(dt)
 
             else:
-                self.clear_screen()
+                #self.clear_screen()
                 self.display.draw(self.dynamic_objects + self.static_objects)
-            print(self.paused)
+            #print(self.paused)
 
             self.calculate_frame_rate()
             self.limit_frame_rate()
@@ -87,13 +101,14 @@ class Engine:
             for obj in self.dynamic_objects:
                 for obj_2 in self.dynamic_objects:
                     if obj_2 != obj and (obj_2, obj) not in collisions:
-                        print("Test collision")
+                        #print("Test collision")
                         if obj.check_overlap(obj_2):
                             obj.dynamic_collision(Collision(obj_1 = obj, obj_2 = obj_2, col_type = CT.dynamic))
                             obj_2.dynamic_collision(Collision(obj_1 = obj_2, obj_2 = obj, col_type = CT.dynamic))
-                            print("Collision")
+                            #print("Collision")
                         else:
-                            print("No collision")
+                            pass
+                            #print("No collision")
                         collisions.append((obj, obj_2))
         
     def add_object(self, obj):

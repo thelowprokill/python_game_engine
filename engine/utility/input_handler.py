@@ -13,7 +13,6 @@ class InputHandler:
     def close(self):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
-
     def isData(self):
         return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
     
@@ -31,7 +30,7 @@ class InputHandler:
 
     def check_inputs(self):
         c = self.get_input()
-        print(c)
+        #print(c)
         for i in self.inputs:
             if i["char"] == c:
                 i["fun"]()
