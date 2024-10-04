@@ -1,21 +1,13 @@
 from engine.objects.game_object import GameObject
 from engine.utility.vector      import Vector
 from engine.display.colors      import bcolors
-import curses
-import logging
 
 class GOCircle(GameObject):
     def user_init(self):
         self.use_gravity  = True
         self.world_static = False
         self.collision    = True
-        self.color        = bcolors.white
-
-    def user_collision(self, collision):
-        pass
-
-    def jump(self):
-        self.velocity.y = -9.81
+        self.color        = bcolors.red
 
     def dynamic_collision(self, collision):
         super().dynamic_collision(collision)
@@ -38,15 +30,9 @@ class GOCircle(GameObject):
     def set_model(self):
         self.model = [
             [
-              #["",   "-", "-", "-", "-", ""  ],
-              #["/",  "",  "",  "",  "",  "\\"],
-              #["|",  "",  self.obj_name,  "",  "",  "|" ],
-              #["|",  "",  "",  "",  "",  "|" ],
-              #["\\", "",  "",  "",  "",  "/" ],
-              #["",   "-", "-", "-", "-", ""  ]
               " ---- ",
               "/    \\",
-              "|    |",
+              "| It |",
               "|    |",
               "\\    /",
               " ---- "
@@ -64,10 +50,3 @@ class GOCircle(GameObject):
                 [Vector(-1, 0), Vector(0, 1),   Vector(0, 1),  Vector(0, 1),  Vector(0, 1),  Vector(1, 0)],
             ]
         ]
-
-    def render(self, window):
-        super().render(window)
-        
-        if self.game_manager.it == self.player_id:
-            window.addstr(int(self.position.y) + 2, int(self.position.x) + 2, "It", curses.color_pair(bcolors.red))
-

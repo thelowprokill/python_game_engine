@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import logging
+
 import os
 import time
 
@@ -12,7 +14,8 @@ from engine.utility.input_handler        import InputHandler
 from engine.utility.curses_input_handler import CursesInuputHandler
 
 class Engine:
-    def __init__(self, fps = 15):
+    def __init__(self, game_manager, fps = 60):
+        logging.basicConfig(filename="logs/engine.log", level=logging.INFO)
         self.display         = Display()
         self.max_fps         = fps
         self.fps_frames      = 0
@@ -21,37 +24,44 @@ class Engine:
         self.world_collision = True
         self.obj_collision   = True
 
-        self.paused          = False
+        self.paused          = True
 
         self.dynamic_objects = []
         self.static_objects  = []
+        self.game_manager    = game_manager
         self.input_handler   = InputHandler()
         self.curses_input    = CursesInuputHandler()
 
-        #self.input_handler.bind_input("\x1b", self, self.pause)
-        #self.input_handler.bind_input(" ",    self, self.resume)
+
+        logging.info(f"Engine initialized, running at {self.max_fps} FPS")
+
+        self.input_handler.bind_input("\x1b", self, self.pause)
+        self.input_handler.bind_input(" ",    self, self.resume)
         #self.curses_input.bind_input("\x1b", self, self.pause)
-        self.curses_input.bind_input(" ",    self, self.resume)
+        #self.curses_input.bind_input(" ",    self, self.resume)
+
+        wrapper(self.init_engine)
+
+    def init_engine(self, stdscr):
+        self.window = stdscr
+        self.display.set_window(stdscr)
+        self.curses_input.set_window(stdscr)
+        stdscr.nodelay(True)
 
     def set_res(self, width = None, height = None):
         self.display.width  = width  if width  is not None else self.display.width
         self.display.height = height if height is not None else self.display.height
 
     def start(self):
-        wrapper(self.run)
-
-    def run(self, stdscr):
+        logging.info("Engine started")
         self.fps_time   = time.time()
         self.start_time = time.time()
         self.last_time  = time.time()
         self.next_time  = time.time()
 
-        self.display.set_window(stdscr)
-        self.curses_input.set_window(stdscr)
-        stdscr.nodelay(True)
-
         i = 0
-        while i < 800:
+        running = True
+        while running:
             self.next_time = time.time()
             dt = self.next_time - self.last_time
             self.input_handler.check_inputs()
@@ -67,7 +77,7 @@ class Engine:
 
             else:
                 #self.clear_screen()
-                self.display.draw(self.dynamic_objects + self.static_objects)
+                self.display.draw(self.dynamic_objects + self.static_objects + [self.game_manager])
             #print(self.paused)
 
             self.calculate_frame_rate()
@@ -80,9 +90,14 @@ class Engine:
         #    o.input(c)
             o.tick(dt)
 
+        self.game_manager.tick(dt)
+
         self.check_collision()
 
-        self.display.draw(self.dynamic_objects + self.static_objects)
+        try:
+            self.display.draw(self.dynamic_objects + self.static_objects + [self.game_manager])
+        except Exception as e:
+            logging.error(f"Exception in draw: {e}")
 
     def pause(self):
         self.paused = True
@@ -97,26 +112,29 @@ class Engine:
                 obj.check_world_collision(self.display.width, self.display.height)
 
         if self.obj_collision:
-            collisions = []
-            for obj in self.dynamic_objects:
-                for obj_2 in self.dynamic_objects:
-                    if obj_2 != obj and (obj_2, obj) not in collisions:
+            #collisions = []
+            for obj_1 in self.dynamic_objects:
+                for obj_2 in self.dynamic_objects + self.static_objects:
+                    if obj_2 != obj_1: #and (obj_2, obj_1) not in collisions:
                         #print("Test collision")
-                        if obj.check_overlap(obj_2):
-                            obj.dynamic_collision(Collision(obj_1 = obj, obj_2 = obj_2, col_type = CT.dynamic))
-                            obj_2.dynamic_collision(Collision(obj_1 = obj_2, obj_2 = obj, col_type = CT.dynamic))
-                            #print("Collision")
-                        else:
-                            pass
-                            #print("No collision")
-                        collisions.append((obj, obj_2))
+                        if obj_1.check_overlap(obj_2):
+                            # collision
+                            obj_1.dynamic_collision(Collision(obj_1 = obj_1, obj_2 = obj_2, col_type = CT.dynamic))
+                            #obj_2.dynamic_collision(Collision(obj_1 = obj_2, obj_2 = obj_1, col_type = CT.dynamic))
+                        #collisions.append((obj_1, obj_2))
         
     def add_object(self, obj):
         self.dynamic_objects.append(obj)
+
+    def remove_object(self, obj):
+        self.dynamic_objects.remove(obj)
         
     def add_static_object(self, obj):
         obj.world_static = True
         self.static_objects.append(obj)
+
+    def remove_static_object(self, obj):
+        self.static_objects.remove(obj)
 
     def clear_screen(self):
         os.system("clear")

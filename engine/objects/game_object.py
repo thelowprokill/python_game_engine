@@ -2,6 +2,7 @@ from engine.utility.vector          import Vector
 from engine.utility.collision       import Collision
 from engine.utility.collision_enums import CollisionModes as CM, CollisionTypes as CT, CollisionDirection as CD
 import curses
+import logging
 
 #################################################
 # class:   GameObject                           #
@@ -15,23 +16,25 @@ class GameObject:
     # purpose: initializer for game object      #
     # overwriteable: False                      #
     #############################################
-    def __init__(self, e, pos = Vector(1, 1), vel = Vector()):
-        self.engine_ref    = e
-        self.last_position = pos
-        self.position      = pos
-        self.z = 0
+    def __init__(self, e, gm, pos = Vector(1, 1), vel = Vector()):
+        self.engine_ref     = e
+        self.game_manager   = gm
+        self.last_position  = pos
+        self.position       = pos
+        self.z              = 0
+        self.player_id      = 0
 
-        self.color     = 0
+        self.color          = 0
 
-        self.on_screen = False
+        self.on_screen      = False
 
-        self.gravity  = Vector(0, 9.81)
-        self.velocity = vel
+        self.gravity        = Vector(0, 9.81)
+        self.velocity       = vel
 
         self.use_gravity    = False
         self.world_static   = True
         self.collision      = False
-        self.collision_mode = CM.quick
+        self.collision_mode = CM.exact
 
         self.mass           = 1
         self.r              = 1
@@ -46,6 +49,7 @@ class GameObject:
 
         self.set_model()
         self.set_colider()
+        self.set_normal()
 
     #############################################
     # fun: user_init/1                          #
@@ -80,17 +84,36 @@ class GameObject:
     #############################################
     def dynamic_collision(self, collision):
         if self.collision and collision.obj_1 is not None and collision.obj_2 is not None:
-            if collision.obj_1 == self:
-                #print("I am obj 1")
-                pass
-            elif collision.obj_2 == self:
-                #print("I am obj 2")
-                pass
-            else:
-                #print("Why do I not fit in")
-                pass
-            #print(collision)
-            #print(5/0)
+            if collision.obj_1 == self or collision.obj_2 == self:
+                obj = collision.obj_1 if collision.obj_1 != self else collision.obj_2
+
+                normal = obj.find_normal(collision)#.normalize()
+
+                vel = self.velocity
+                v1 = vel.t_sub(normal.t_mult(2 * normal.dot(vel)))
+
+                #logging.info(f"Collision between {collision.obj_1.player_id} and {collision.obj_2.player_id}")
+                #logging.info(f"V0: {vel.x}, {vel.y}")
+                #logging.info(f"V1: {v1.x}, {v1.y}")
+                #logging.info(f"Normal: {normal.x}, {normal.y}")
+
+                self.velocity = v1
+
+    def find_normal(self, collision):
+        obj = None
+        normal = Vector(0, 0)
+        if self == collision.obj_1:
+            obj = collision.obj_2
+        elif self == collision.obj_2:
+            obj = collision.obj_1
+        if obj is not None:
+            for y in range(len(self.normal[self.frame])):
+                for x in range(len(self.normal[self.frame][y])):
+                    if self.collider[self.frame][y][x] and obj.check_collision(int(self.position.x) + x, int(self.position.y) + y):
+                        normal = self.normal[self.frame][y][x]
+                        if normal != Vector(0, 0):
+                            return normal
+        return normal
 
     #############################################
     # fun: world_collision/4                    #
@@ -103,7 +126,7 @@ class GameObject:
             if self.collision_mode == CM.exact and collision.col_type == CT.world and collision.col_dir in CD:
                 if   collision.col_dir == CD.right and self.velocity.x > 0:
                     self.velocity.x *= -1
-                    self.position.x = x - (self.position.x + self.collider_height() - x) - self.collider_height()
+                    self.position.x = x - (self.position.x + self.collider_width() - x) - self.collider_width()
                 elif collision.col_dir == CD.left  and self.velocity.x < 0:
                     self.velocity.x *= -1
                     self.position.x *= -1
@@ -113,6 +136,7 @@ class GameObject:
                 elif collision.col_dir == CD.up    and self.velocity.y < 0:
                     self.velocity.y *= -1
                     self.position.y *= -1
+                    self.position.y += 3
             if self.collision_mode == CM.quick and collision.col_type == CT.world and collision.col_dir in CD:
                 if   collision.col_dir == CD.right and self.velocity.x > 0:
                     self.velocity.x *= -1
@@ -140,9 +164,11 @@ class GameObject:
             return ("", -1, None)
 
     def render(self, window):
+        x = int(self.position.x)
         y = int(self.position.y)
         for l in self.model[self.frame]:
-            window.addstr(y, int(self.position.x), l, curses.color_pair(self.color))
+            if y >= 0 and y < self.engine_ref.display.height and x >= 0 and x < self.engine_ref.display.width - len(l):
+                window.addstr(y, int(self.position.x), l, curses.color_pair(self.color))
             y += 1
 
     #############################################
@@ -164,6 +190,11 @@ class GameObject:
     def set_collider(self):
         self.model = [
             [True]
+        ]
+
+    def set_normal(self):
+        self.normal = [
+            [Vector(0, 0)]
         ]
 
     #############################################
@@ -208,7 +239,7 @@ class GameObject:
         y = y - int(self.position.y)
 
         if self.in_bounding_box(x, y):
-            return self.collider[y][x]
+            return self.collider[self.frame][y][x]
         else:
             return False
 
@@ -243,11 +274,11 @@ class GameObject:
         #    self.velocity.y *= -1
 
         if self.collision:
-            if self.position.x <= 0:
+            if self.position.x <= 1:
                 self.world_collision(Collision(obj_1 = self, col_type = CT.world, col_dir = CD.left),  x, y)
             elif self.position.x + self.collider_width() >= x:
                 self.world_collision(Collision(obj_1 = self, col_type = CT.world, col_dir = CD.right), x, y)
-            if self.position.y <= 0:
+            if self.position.y <= 4:
                 self.world_collision(Collision(obj_1 = self, col_type = CT.world, col_dir = CD.up),    x, y)
             elif self.position.y + self.collider_height() >= y:
                 self.world_collision(Collision(obj_1 = self, col_type = CT.world, col_dir = CD.down),  x, y)
@@ -277,7 +308,7 @@ class GameObject:
     # overwriteable: False                      #
     #############################################
     def collider_width(self):
-        return len(self.collider[0])
+        return len(self.collider[self.frame][0])
     #############################################
     # fun: collider_height/1                    #
     # purpose: gets the height of the current   #
@@ -285,7 +316,7 @@ class GameObject:
     # overwriteable: False                      #
     #############################################
     def collider_height(self):
-        return len(self.collider)
+        return len(self.collider[self.frame])
     #############################################
     # fun: in_bounding_box/3                    #
     # purpose: gets the height of the current   #
