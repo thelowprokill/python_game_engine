@@ -25,6 +25,7 @@ class Engine:
         self.obj_collision   = True
 
         self.paused          = True
+        self.running         = True
 
         self.dynamic_objects = []
         self.static_objects  = []
@@ -34,11 +35,6 @@ class Engine:
 
 
         logging.info(f"Engine initialized, running at {self.max_fps} FPS")
-
-        self.input_handler.bind_input("\x1b", self, self.pause)
-        self.input_handler.bind_input(" ",    self, self.resume)
-        #self.curses_input.bind_input("\x1b", self, self.pause)
-        #self.curses_input.bind_input(" ",    self, self.resume)
 
         wrapper(self.init_engine)
 
@@ -60,8 +56,7 @@ class Engine:
         self.next_time  = time.time()
 
         i = 0
-        running = True
-        while running:
+        while self.running:
             self.next_time = time.time()
             dt = self.next_time - self.last_time
             self.input_handler.check_inputs()
@@ -69,25 +64,21 @@ class Engine:
 
             if not self.paused:
                 i += 1
-                #self.clear_screen()
-                #print("FPS: {}".format(self.fps))
-
-                #self.display.tick(dt)
                 self.tick(dt)
 
             else:
-                #self.clear_screen()
                 self.display.draw(self.dynamic_objects + self.static_objects + [self.game_manager])
-            #print(self.paused)
 
             self.calculate_frame_rate()
             self.limit_frame_rate()
             self.last_time = self.next_time
         self.end_time = time.time()
 
+    def quit(self):
+        self.running = False
+
     def tick(self, dt):
         for o in self.dynamic_objects:
-        #    o.input(c)
             o.tick(dt)
 
         self.game_manager.tick(dt)
@@ -112,29 +103,40 @@ class Engine:
                 obj.check_world_collision(self.display.width, self.display.height)
 
         if self.obj_collision:
-            #collisions = []
             for obj_1 in self.dynamic_objects:
                 for obj_2 in self.dynamic_objects + self.static_objects:
-                    if obj_2 != obj_1: #and (obj_2, obj_1) not in collisions:
-                        #print("Test collision")
+                    if obj_2 != obj_1:
                         if obj_1.check_overlap(obj_2):
-                            # collision
                             obj_1.dynamic_collision(Collision(obj_1 = obj_1, obj_2 = obj_2, col_type = CT.dynamic))
-                            #obj_2.dynamic_collision(Collision(obj_1 = obj_2, obj_2 = obj_1, col_type = CT.dynamic))
-                        #collisions.append((obj_1, obj_2))
         
     def add_object(self, obj):
-        self.dynamic_objects.append(obj)
+        try:
+            self.dynamic_objects.append(obj)
+        except Exception as e:
+            logging.error(f"Exception in add_object: {e}")
 
     def remove_object(self, obj):
-        self.dynamic_objects.remove(obj)
+        try:
+            self.dynamic_objects.remove(obj)
+        except Exception as e:
+            logging.error(f"Exception in remove_object: {e}").dynamic_objects.remove(obj)
         
     def add_static_object(self, obj):
-        obj.world_static = True
-        self.static_objects.append(obj)
+        try:
+            obj.world_static = True
+            self.static_objects.append(obj)
+        except Exception as e:
+            logging.error(f"Exception in add_static_object: {e}")
 
     def remove_static_object(self, obj):
-        self.static_objects.remove(obj)
+        try:
+            self.static_objects.remove(obj)
+        except Exception as e:
+            logging.error(f"Exception in remove_static_object: {e}")
+
+    def clear_objects(self):
+        self.dynamic_objects = []
+        self.static_objects  = []
 
     def clear_screen(self):
         os.system("clear")

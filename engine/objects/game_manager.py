@@ -16,7 +16,8 @@ class GameManager:
     def user_init_game(self):
         pass
     def user_init_inputs(self):
-        pass
+        self.engine.input_handler.bind_input("\x1b", self.engine, self.engine.pause)
+        self.engine.input_handler.bind_input(" ",    self.engine, self.engine.resume)
 
     def render(self, window):
         pass

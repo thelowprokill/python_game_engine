@@ -39,5 +39,10 @@ class InputHandler:
         self.inputs.append({"char": char, "obj": obj, "fun": fun})
 
     def unbind_input(self, char, obj):
-        pass
+        for i in self.inputs:
+            if i["char"] == char and i["obj"] == obj:
+                self.inputs.remove(i)
+
+    def clear_inputs(self):
+        self.inputs = []
 
