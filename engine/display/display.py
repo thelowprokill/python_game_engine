@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import curses
+import logging
 
 class Display:
     def __init__(self):
@@ -22,18 +23,24 @@ class Display:
 
         # draw objects
         for obj in objects:
-            obj.render(self.window)
+            try:
+                obj.render(self.window)
+            except Exception as e:
+                logging.error(f"Exception in object render: {e}")
 
         # draw border
         top = ""
         for i in range(self.width):
             top += "="
 
-        self.window.addstr(3, 0, top)
-        self.window.addstr(self.height - 1, 0, top)
-        for i in range(4, self.height - 1):
-            self.window.addstr(i, 0, "|")
-            self.window.addstr(i, self.width - 1, "|")
+        try:
+            self.window.addstr(3, 0, top)
+            self.window.addstr(self.height - 1, 0, top)
+            for i in range(4, self.height - 1):
+                self.window.addstr(i, 0, "|")
+                self.window.addstr(i, self.width - 1, "|")
+        except Exception as e:
+            logging.error(f"Exception in border render: {e}")
             
 
         self.window.refresh()

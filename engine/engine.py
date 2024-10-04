@@ -67,7 +67,7 @@ class Engine:
                 self.tick(dt)
 
             else:
-                self.display.draw(self.dynamic_objects + self.static_objects + [self.game_manager])
+                self.display.draw(self.static_objects + [self.game_manager] + self.dynamic_objects)
 
             self.calculate_frame_rate()
             self.limit_frame_rate()
@@ -85,10 +85,7 @@ class Engine:
 
         self.check_collision()
 
-        try:
-            self.display.draw(self.dynamic_objects + self.static_objects + [self.game_manager])
-        except Exception as e:
-            logging.error(f"Exception in draw: {e}")
+        self.display.draw(self.static_objects + [self.game_manager] + self.dynamic_objects)
 
     def pause(self):
         self.paused = True

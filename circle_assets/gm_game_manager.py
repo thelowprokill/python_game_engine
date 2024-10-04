@@ -51,6 +51,13 @@ class GMGameManager(GameManager):
             self.engine.input_handler.bind_input(control, circle, circle.jump)
             self.players.append(circle)
             self.engine.add_object(circle)
+
+            circle = GOCircle(self.engine, self, pos = Vector(self.engine.display.width - 10 * (len(self.player_colors) - i + 1), 10), vel = Vector(-20, 0))
+            circle.player_id = i
+            circle.color = color
+            self.engine.input_handler.bind_input(control, circle, circle.jump)
+            self.players.append(circle)
+            self.engine.add_object(circle)
             i += 1
 
         self.scores = []
@@ -59,7 +66,7 @@ class GMGameManager(GameManager):
 
     def set_up_world_1(self):
         # dynamic
-        self.it_start = GOCircle(self.engine, self, pos = Vector(230, 10), vel = Vector(0, 0))
+        self.it_start = GOCircle(self.engine, self, pos = Vector(105, 40), vel = Vector(0, 0))
         self.it_start.color = bcolors.red
         self.it_start.player_id = -1
 
@@ -155,3 +162,6 @@ class GMGameManager(GameManager):
         window.addstr(0, self.engine.display.width - len(f"Player 2 Score: {self.scores[1]}") - 2, f"Player 2 Score: {self.scores[1]}", curses.color_pair(bcolors.green))
         window.addstr(2, 2, f"Player 3 Score: {self.scores[2]}", curses.color_pair(bcolors.blue))
         window.addstr(2, self.engine.display.width - len(f"Player 4 Score: {self.scores[3]}") - 2, f"Player 4 Score: {self.scores[3]}", curses.color_pair(bcolors.yellow))
+
+        #window.addstr(1, int(self.engine.display.width / 2) - int(len(f"FPS: {self.engine.fps}") / 2), f"{self.engine.display.width}", f"FPS: {self.engine.fps}")
+        window.addstr(2, int(self.engine.display.width / 2 - len(f"FPS: {self.engine.fps}") / 2), f"FPS: {self.engine.fps}")
