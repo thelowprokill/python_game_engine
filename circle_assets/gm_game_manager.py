@@ -25,7 +25,7 @@ class GMGameManager(GameManager):
         self.player_4_score    = 0
         self.player_3_score    = 0
         self.it                = -1
-        self.victory_threshold = 5
+        self.victory_threshold = 25
         self.player_colors     = [bcolors.white, bcolors.green, bcolors.blue, bcolors.yellow]
         self.player_controls   = ["h", "j", "k", "l"]
         self.players           = []
