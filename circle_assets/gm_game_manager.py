@@ -27,7 +27,7 @@ class GMGameManager(GameManager):
         self.it                = -1
         self.victory_threshold = 25
         self.player_colors     = [bcolors.white, bcolors.green, bcolors.blue, bcolors.yellow]
-        self.player_controls   = ["h", "j", "k", "l"]
+        self.player_controls   = ["a", "", "", "l"]
         self.players           = []
         self.scores            = []
         self.game_over         = False
@@ -97,7 +97,7 @@ class GMGameManager(GameManager):
         self.engine.add_static_object(obstacle_3)
         self.engine.add_static_object(obstacle_4)
         self.engine.add_static_object(obstacle_5)
-        self.engine.add_static_object(obstacle_6)
+        #self.engine.add_static_object(obstacle_6)
         self.engine.add_static_object(obstacle_7)
         self.engine.add_static_object(obstacle_8)
 
